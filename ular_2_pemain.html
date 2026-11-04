@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#10131d">
+  <title>Game Ular 2 Pemain</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #10131d;
+      color: #f4f6fb;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(ellipse at top, #222b3d, #10131d 70%);
+    }
+
+    main { width: min(720px, 100%); text-align: center; }
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 7vw, 3rem); }
+    .subtitle { margin: 0 0 20px; color: #aab4c8; }
+
+    .scores { display: flex; justify-content: center; gap: 12px; margin-bottom: 12px; }
+    .score {
+      min-width: 150px;
+      padding: 10px 18px;
+      border: 1px solid #ffffff24;
+      border-radius: 12px;
+      background: #ffffff0b;
+      font-weight: bold;
+    }
+    .score span { display: block; margin-top: 4px; font-size: 1.6rem; }
+    .green { color: #77f2a4; }
+    .blue { color: #70c8ff; }
+
+    .board {
+      padding: 9px;
+      border: 1px solid #ffffff24;
+      border-radius: 14px;
+      background: #080b12;
+      box-shadow: 0 16px 48px #0008;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      background: #141a25;
+    }
+
+    #message { min-height: 25px; margin: 14px 0; font-weight: bold; }
+    .buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+    .mode-select {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+      gap: 12px;
+      margin: 28px auto;
+      max-width: 560px;
+    }
+    .mode-option {
+      min-height: 100px;
+      padding: 18px;
+      border: 1px solid #ffffff24;
+      border-radius: 14px;
+      background: #ffffff0b;
+      color: #f4f6fb;
+      text-align: left;
+    }
+    .mode-option strong { display: block; margin-bottom: 7px; font-size: 1.1rem; }
+    .mode-option span { display: block; color: #aab4c8; font-size: 0.9rem; font-weight: normal; line-height: 1.45; }
+    button {
+      min-width: 120px;
+      padding: 11px 18px;
+      border: 0;
+      border-radius: 9px;
+      background: #9af4b4;
+      color: #102018;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.secondary { border: 1px solid #ffffff30; background: #ffffff12; color: #f4f6fb; }
+    button:focus-visible { outline: 3px solid #ffca62; outline-offset: 3px; }
+
+    .help { margin-top: 20px; color: #aab4c8; line-height: 1.8; }
+    .touch-controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 14px auto;
+    }
+    .touch-controller { min-width: 150px; }
+    .touch-controller-title { margin: 0 0 8px; font-size: 0.9rem; font-weight: bold; }
+    .direction-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 54px);
+      grid-template-rows: repeat(3, 54px);
+      justify-content: center;
+      gap: 4px;
+    }
+    .direction-pad button {
+      min-width: 0;
+      min-height: 0;
+      padding: 0;
+      border: 1px solid #ffffff30;
+      background: #ffffff12;
+      color: #f4f6fb;
+      font-size: 1.25rem;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .direction-pad button:active { background: #ffffff35; transform: scale(0.96); }
+    .direction-pad [data-direction="up"] { grid-column: 2; grid-row: 1; }
+    .direction-pad [data-direction="left"] { grid-column: 1; grid-row: 2; }
+    .direction-pad [data-direction="right"] { grid-column: 3; grid-row: 2; }
+    .direction-pad [data-direction="down"] { grid-column: 2; grid-row: 3; }
+    .direction-pad button { min-height: 48px; }
+    label { display: block; width: min(440px, 100%); margin: 14px auto 6px; color: #cbd4e4; text-align: left; }
+    input {
+      display: block;
+      width: min(440px, 100%);
+      margin: 0 auto;
+      padding: 12px 14px;
+      border: 1px solid #ffffff30;
+      border-radius: 9px;
+      background: #0c1019;
+      color: #f4f6fb;
+      font: inherit;
+    }
+    #online-error { min-height: 24px; color: #ff9a9a; }
+    kbd {
+      padding: 3px 7px;
+      border: 1px solid #ffffff30;
+      border-radius: 5px;
+      background: #ffffff10;
+      color: #fff;
+      font: inherit;
+      font-size: 0.88em;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        display: block;
+        padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+          max(24px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+      }
+      main { margin: 0 auto; }
+      h1 { font-size: 2rem; }
+      .score { min-width: 0; flex: 1; }
+      button { min-width: 0; }
+      .buttons button { min-width: 110px; }
+      .touch-controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+      }
+      .touch-controller { min-width: 0; flex: 1; }
+      .direction-pad {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: repeat(3, clamp(42px, 13vw, 52px));
+        gap: 3px;
+        width: min(100%, 174px);
+        margin: 0 auto;
+      }
+      .direction-pad button { width: 100%; min-height: 42px; padding: 0; }
+      .board { padding: 5px; border-radius: 10px; }
+      .help { margin-top: 12px; font-size: 0.88rem; line-height: 1.7; }
+      .mode-select { margin: 20px auto; }
+      .mode-option { min-height: 84px; padding: 14px; }
+      input { font-size: 16px; }
+    }
+
+    @media (max-width: 340px) {
+      .touch-controller-title { font-size: 0.8rem; }
+      .direction-pad { grid-template-rows: repeat(3, 42px); }
+      .direction-pad button { font-size: 1.05rem; }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+      body { display: block; padding: 8px; }
+      main { width: min(820px, 100%); margin: 0 auto; }
+      h1 { font-size: 1.7rem; }
+      .subtitle { margin-bottom: 10px; }
+      .touch-controls { margin: 8px auto; }
+      .help { margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Game Ular 2 Pemain</h1>
+    <p class="subtitle">Pilih cara bermain. Mode 2 pemain di satu perangkat tidak perlu server.</p>
+
+    <section id="mode-select" class="mode-select" aria-label="Pilih mode permainan">
+      <button id="local-mode-button" class="mode-option" type="button">
+        <strong>Main 2 pemain</strong>
+        <span>Satu komputer atau HP. Tidak perlu koneksi internet.</span>
+      </button>
+      <button id="online-mode-button" class="mode-option" type="button">
+        <strong>Main online</strong>
+        <span>Bermain dari perangkat berbeda dengan kode ruang.</span>
+      </button>
+    </section>
+
+    <section id="local-game">
+      <section class="scores" aria-label="Skor pemain">
+        <div class="score green">Pemain 1<span id="score-one">0</span></div>
+        <div class="score blue">Pemain 2<span id="score-two">0</span></div>
+      </section>
+
+      <div class="board">
+        <canvas id="game" width="600" height="360" aria-label="Papan game ular"></canvas>
+      </div>
+      <p id="message" aria-live="polite">Tekan Mulai untuk bermain.</p>
+      <div class="buttons">
+        <button id="start-button" type="button">Mulai</button>
+        <button id="reset-button" class="secondary" type="button">Ulangi</button>
+        <button id="local-back-button" class="secondary" type="button" hidden>Menu</button>
+      </div>
+
+      <div class="touch-controls" aria-label="Kontrol layar sentuh untuk dua pemain">
+        <div class="touch-controller">
+          <p class="touch-controller-title green">Pemain 1</p>
+          <div class="direction-pad">
+            <button type="button" data-local-player="0" data-direction="up" aria-label="Pemain 1 atas">▲</button>
+            <button type="button" data-local-player="0" data-direction="left" aria-label="Pemain 1 kiri">◀</button>
+            <button type="button" data-local-player="0" data-direction="right" aria-label="Pemain 1 kanan">▶</button>
+            <button type="button" data-local-player="0" data-direction="down" aria-label="Pemain 1 bawah">▼</button>
+          </div>
+        </div>
+        <div class="touch-controller">
+          <p class="touch-controller-title blue">Pemain 2</p>
+          <div class="direction-pad">
+            <button type="button" data-local-player="1" data-direction="up" aria-label="Pemain 2 atas">▲</button>
+            <button type="button" data-local-player="1" data-direction="left" aria-label="Pemain 2 kiri">◀</button>
+            <button type="button" data-local-player="1" data-direction="right" aria-label="Pemain 2 kanan">▶</button>
+            <button type="button" data-local-player="1" data-direction="down" aria-label="Pemain 2 bawah">▼</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="help">
+        <strong class="green">Pemain 1:</strong>
+        <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>
+        &nbsp; | &nbsp;
+        <strong class="blue">Pemain 2:</strong>
+        <kbd>↑</kbd> <kbd>←</kbd> <kbd>↓</kbd> <kbd>→</kbd><br>
+        Tekan <kbd>Spasi</kbd> untuk jeda atau lanjut. Makan buah dan hindari tabrakan!
+      </p>
+    </section>
+
+    <section id="online-lobby" hidden>
+      <p>Gunakan nama, lalu buat ruang atau masukkan kode dari teman.</p>
+      <label for="online-name">Nama pemain</label>
+      <input id="online-name" maxlength="20" placeholder="Contoh: Budi">
+      <div class="buttons">
+        <button id="create-room-button" type="button">Buat ruang</button>
+      </div>
+      <label for="room-code-input">Kode ruang teman</label>
+      <input id="room-code-input" maxlength="6" autocomplete="off" placeholder="Contoh: AB12CD">
+      <div class="buttons">
+        <button id="join-room-button" class="secondary" type="button">Gabung ruang</button>
+        <button id="online-back-button" class="secondary" type="button">Kembali</button>
+      </div>
+      <p id="online-error" aria-live="polite"></p>
+      <p id="online-help" class="help">Buat ruang lalu bagikan kodenya kepada teman.</p>
+    </section>
+
+    <section id="online-game" hidden>
+      <p>Kode ruang: <strong id="active-room-code"></strong> <button id="copy-room-link" class="secondary" type="button">Salin tautan</button></p>
+      <section class="scores" aria-label="Skor online">
+        <div class="score green"><span id="online-name-one">Pemain 1</span><span id="online-score-one">0</span></div>
+        <div class="score blue"><span id="online-name-two">Pemain 2</span><span id="online-score-two">0</span></div>
+      </section>
+      <div class="board">
+        <canvas id="online-board" width="600" height="360" aria-label="Papan game online"></canvas>
+      </div>
+      <p id="online-message" aria-live="polite">Menunggu pemain...</p>
+      <div class="buttons">
+        <button id="online-start-button" type="button" disabled>Menunggu pemain</button>
+        <button id="online-reset-button" class="secondary" type="button">Ulangi</button>
+        <button id="leave-room-button" class="secondary" type="button">Keluar</button>
+      </div>
+      <div id="online-touch-controls" class="touch-controls" hidden aria-label="Kontrol layar sentuh">
+        <div class="touch-controller">
+          <p id="online-touch-title" class="touch-controller-title green">Kontrol Anda</p>
+          <div class="direction-pad">
+            <button type="button" data-online-direction="up" aria-label="Atas">▲</button>
+            <button type="button" data-online-direction="left" aria-label="Kiri">◀</button>
+            <button type="button" data-online-direction="right" aria-label="Kanan">▶</button>
+            <button type="button" data-online-direction="down" aria-label="Bawah">▼</button>
+          </div>
+        </div>
+      </div>
+      <p class="help">Pemain 1: <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> | Pemain 2: tombol panah | <kbd>Spasi</kbd> jeda</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const context = canvas.getContext("2d");
+      const scoreOne = document.getElementById("score-one");
+      const scoreTwo = document.getElementById("score-two");
+      const message = document.getElementById("message");
+      const startButton = document.getElementById("start-button");
+      const onlineCanvas = document.getElementById("online-board");
+      const onlineContext = onlineCanvas.getContext("2d");
+      const modeSelect = document.getElementById("mode-select");
+      const localGame = document.getElementById("local-game");
+      const onlineLobby = document.getElementById("online-lobby");
+      const onlineGame = document.getElementById("online-game");
+      const onlineMessage = document.getElementById("online-message");
+      const onlineStartButton = document.getElementById("online-start-button");
+      const resetButton = document.getElementById("reset-button");
+      const columns = 30;
+      const rows = 18;
+      const cell = canvas.width / columns;
+      const directions = {
+        up: { x: 0, y: -1 },
+        down: { x: 0, y: 1 },
+        left: { x: -1, y: 0 },
+        right: { x: 1, y: 0 },
+      };
+
+      let snakes;
+      let scores;
+      let food;
+      let gameStatus;
+      let timer = null;
+      let onlineSocket = null;
+      let onlinePlayer = -1;
+      let onlineRoomCode = "";
+      let onlineSnapshot = null;
+      let onlineStatus = "disconnected";
+      let onlineTimeout = null;
+      let selectedMode = "local";
+
+      function newGame() {
+        clearInterval(timer);
+        timer = null;
+        snakes = [
+          {
+            body: [{ x: 5, y: 8 }, { x: 4, y: 8 }, { x: 3, y: 8 }],
+            direction: "right",
+            nextDirection: "right",
+            turned: false,
+            color: "#77f2a4",
+          },
+          {
+            body: [{ x: 24, y: 9 }, { x: 25, y: 9 }, { x: 26, y: 9 }],
+            direction: "left",
+            nextDirection: "left",
+            turned: false,
+            color: "#70c8ff",
+          },
+        ];
+        scores = [0, 0];
+        food = createFood();
+        gameStatus = "ready";
+        scoreOne.textContent = "0";
+        scoreTwo.textContent = "0";
+        message.textContent = "Tekan Mulai untuk bermain.";
+        startButton.textContent = "Mulai";
+        draw();
+      }
+
+      function createFood() {
+        const available = [];
+        for (let y = 0; y < rows; y += 1) {
+          for (let x = 0; x < columns; x += 1) {
+            const occupied = snakes.some((snake) =>
+              snake.body.some((part) => part.x === x && part.y === y)
+            );
+            if (!occupied) available.push({ x, y });
+          }
+        }
+        if (available.length === 0) return null;
+        return available[Math.floor(Math.random() * available.length)];
+      }
+
+      function draw() {
+        context.fillStyle = "#141a25";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.strokeStyle = "rgba(255, 255, 255, 0.035)";
+        context.lineWidth = 1;
+        for (let x = 0; x <= columns; x += 1) {
+          context.beginPath();
+          context.moveTo(x * cell, 0);
+          context.lineTo(x * cell, canvas.height);
+          context.stroke();
+        }
+        for (let y = 0; y <= rows; y += 1) {
+          context.beginPath();
+          context.moveTo(0, y * cell);
+          context.lineTo(canvas.width, y * cell);
+          context.stroke();
+        }
+
+        if (food) {
+          context.fillStyle = "#ffca62";
+          context.beginPath();
+          context.arc((food.x + 0.5) * cell, (food.y + 0.5) * cell, cell * 0.34, 0, Math.PI * 2);
+          context.fill();
+        }
+
+        snakes.forEach((snake) => {
+          snake.body.forEach((part, index) => {
+            context.fillStyle = index === 0 ? snake.color : `${snake.color}b8`;
+            context.fillRect(part.x * cell + 2, part.y * cell + 2, cell - 4, cell - 4);
+          });
+        });
+
+        if (gameStatus === "ready" || gameStatus === "paused" || gameStatus === "finished") {
+          context.fillStyle = "rgba(8, 11, 18, 0.72)";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.fillStyle = "#ffffff";
+          context.textAlign = "center";
+          context.textBaseline = "middle";
+          context.font = "bold 28px Arial, sans-serif";
+          const overlayText = gameStatus === "ready"
+            ? "SIAP BERMAIN?"
+            : gameStatus === "paused"
+              ? "DIJEDA"
+              : "PERMAINAN SELESAI";
+          context.fillText(overlayText, canvas.width / 2, canvas.height / 2);
+        }
+      }
+
+      function startGame() {
+        if (gameStatus !== "ready" && gameStatus !== "paused") return;
+        gameStatus = "running";
+        message.textContent = "Permainan berlangsung! Hindari dinding dan ular lawan.";
+        startButton.textContent = "Jeda";
+        draw();
+        timer = setInterval(tick, 120);
+      }
+
+      function pauseGame() {
+        if (gameStatus === "running") {
+          clearInterval(timer);
+          timer = null;
+          gameStatus = "paused";
+          message.textContent = "Permainan dijeda. Tekan Lanjut atau Spasi.";
+          startButton.textContent = "Lanjut";
+          draw();
+        } else if (gameStatus === "paused") {
+          startGame();
+        }
+      }
+
+      function sameCell(first, second) {
+        return first.x === second.x && first.y === second.y;
+      }
+
+      function tick() {
+        snakes.forEach((snake) => {
+          snake.direction = snake.nextDirection;
+          snake.turned = false;
+        });
+
+        const heads = snakes.map((snake) => {
+          const direction = directions[snake.direction];
+          return {
+            x: snake.body[0].x + direction.x,
+            y: snake.body[0].y + direction.y,
+          };
+        });
+        const eating = heads.map((head) => food !== null && sameCell(head, food));
+        const dead = snakes.map((snake, index) => {
+          const head = heads[index];
+          const outside = head.x < 0 || head.x >= columns || head.y < 0 || head.y >= rows;
+          const ownBody = eating[index] ? snake.body : snake.body.slice(0, -1);
+          const other = snakes[1 - index];
+          const otherBody = eating[1 - index] ? other.body : other.body.slice(0, -1);
+          return outside
+            || ownBody.some((part) => sameCell(head, part))
+            || otherBody.some((part) => sameCell(head, part));
+        });
+
+        if (sameCell(heads[0], heads[1])
+          || (sameCell(heads[0], snakes[1].body[0]) && sameCell(heads[1], snakes[0].body[0]))) {
+          dead[0] = true;
+          dead[1] = true;
+        }
+
+        if (dead[0] || dead[1]) {
+          finishGame(dead);
+          return;
+        }
+
+        snakes.forEach((snake, index) => {
+          snake.body.unshift(heads[index]);
+          if (eating[index]) {
+            scores[index] += 1;
+          } else {
+            snake.body.pop();
+          }
+        });
+        if (eating[0] || eating[1]) food = createFood();
+
+        scoreOne.textContent = scores[0];
+        scoreTwo.textContent = scores[1];
+        if (food === null) {
+          gameStatus = "finished";
+          message.textContent = scores[0] === scores[1]
+            ? "Papan penuh! Skor seri."
+            : `Papan penuh! Pemain ${scores[0] > scores[1] ? 1 : 2} menang!`;
+          startButton.textContent = "Main lagi";
+        }
+        draw();
+      }
+
+      function finishGame(dead) {
+        clearInterval(timer);
+        timer = null;
+        gameStatus = "finished";
+        if (dead[0] && dead[1]) {
+          message.textContent = "Seri! Kedua pemain menabrak.";
+        } else {
+          message.textContent = `Pemain ${dead[0] ? 2 : 1} menang!`;
+        }
+        startButton.textContent = "Main lagi";
+        draw();
+      }
+
+      function changeDirection(playerIndex, directionName) {
+        if (gameStatus !== "running") return;
+        const snake = snakes[playerIndex];
+        if (snake.turned) return;
+        const current = directions[snake.direction];
+        const next = directions[directionName];
+        if (next.x === -current.x && next.y === -current.y) return;
+        snake.nextDirection = directionName;
+        snake.turned = true;
+      }
+
+      function drawOnline(snapshot) {
+        onlineContext.fillStyle = "#141a25";
+        onlineContext.fillRect(0, 0, onlineCanvas.width, onlineCanvas.height);
+        const onlineCell = onlineCanvas.width / columns;
+        onlineContext.strokeStyle = "rgba(255, 255, 255, 0.035)";
+        onlineContext.lineWidth = 1;
+        for (let x = 0; x <= columns; x += 1) {
+          onlineContext.beginPath();
+          onlineContext.moveTo(x * onlineCell, 0);
+          onlineContext.lineTo(x * onlineCell, onlineCanvas.height);
+          onlineContext.stroke();
+        }
+        for (let y = 0; y <= rows; y += 1) {
+          onlineContext.beginPath();
+          onlineContext.moveTo(0, y * onlineCell);
+          onlineContext.lineTo(onlineCanvas.width, y * onlineCell);
+          onlineContext.stroke();
+        }
+        if (!snapshot) return;
+        if (snapshot.food) {
+          onlineContext.fillStyle = "#ffca62";
+          onlineContext.beginPath();
+          onlineContext.arc((snapshot.food.x + 0.5) * onlineCell, (snapshot.food.y + 0.5) * onlineCell, onlineCell * 0.34, 0, Math.PI * 2);
+          onlineContext.fill();
+        }
+        snapshot.snakes.forEach((snake, snakeIndex) => {
+          const color = snakeIndex === 0 ? "#77f2a4" : "#70c8ff";
+          snake.body.forEach((part, index) => {
+            onlineContext.fillStyle = index === 0 ? color : `${color}b8`;
+            onlineContext.fillRect(part.x * onlineCell + 2, part.y * onlineCell + 2, onlineCell - 4, onlineCell - 4);
+          });
+        });
+        if (snapshot.status !== "running") {
+          onlineContext.fillStyle = "rgba(8, 11, 18, 0.72)";
+          onlineContext.fillRect(0, 0, onlineCanvas.width, onlineCanvas.height);
+          onlineContext.fillStyle = "#ffffff";
+          onlineContext.textAlign = "center";
+          onlineContext.textBaseline = "middle";
+          onlineContext.font = "bold 28px Arial, sans-serif";
+          const overlay = snapshot.status === "waiting"
+            ? "MENUNGGU TEMAN"
+            : snapshot.status === "ready"
+              ? "SIAP BERMAIN?"
+              : snapshot.status === "paused"
+                ? "DIJEDA"
+                : "PERMAINAN SELESAI";
+          onlineContext.fillText(overlay, onlineCanvas.width / 2, onlineCanvas.height / 2);
+        }
+      }
+
+      function renderOnlineState(snapshot) {
+        onlineSnapshot = snapshot;
+        onlineStatus = snapshot.status;
+        document.getElementById("online-score-one").textContent = snapshot.scores[0];
+        document.getElementById("online-score-two").textContent = snapshot.scores[1];
+        document.getElementById("online-name-one").textContent =
+          `${snapshot.names[0] || "Pemain 1"}${onlinePlayer === 0 ? " (Anda)" : ""}`;
+        document.getElementById("online-name-two").textContent =
+          `${snapshot.names[1] || "Pemain 2"}${onlinePlayer === 1 ? " (Anda)" : ""}`;
+        onlineStartButton.disabled = snapshot.status === "waiting" || snapshot.status === "finished";
+        if (snapshot.status === "waiting") {
+          onlineMessage.textContent = "Bagikan kode ruang dan tunggu teman bergabung.";
+          onlineStartButton.textContent = "Menunggu pemain";
+        } else if (snapshot.status === "ready") {
+          onlineMessage.textContent = "Teman sudah bergabung. Tekan Mulai!";
+          onlineStartButton.textContent = "Mulai";
+          onlineStartButton.disabled = false;
+        } else if (snapshot.status === "running") {
+          onlineMessage.textContent = `Permainan berlangsung! Anda Pemain ${onlinePlayer + 1}.`;
+          onlineStartButton.textContent = "Jeda";
+          onlineStartButton.disabled = false;
+        } else if (snapshot.status === "paused") {
+          onlineMessage.textContent = "Permainan dijeda.";
+          onlineStartButton.textContent = "Lanjut";
+          onlineStartButton.disabled = false;
+        } else if (snapshot.status === "finished") {
+          if (snapshot.winner === null) {
+            onlineMessage.textContent = "Seri! Kedua pemain menabrak.";
+          } else if (snapshot.winner === "draw") {
+            onlineMessage.textContent = snapshot.scores[0] === snapshot.scores[1]
+              ? "Papan penuh! Skor seri."
+              : `Papan penuh! Pemain ${snapshot.scores[0] > snapshot.scores[1] ? 1 : 2} menang!`;
+          } else {
+            onlineMessage.textContent = `Pemain ${snapshot.winner + 1} menang!`;
+          }
+          onlineStartButton.textContent = "Selesai";
+        }
+        document.getElementById("online-touch-controls").hidden = false;
+        const touchTitle = document.getElementById("online-touch-title");
+        touchTitle.textContent = `Anda (Pemain ${onlinePlayer + 1})`;
+        touchTitle.className = `touch-controller-title ${onlinePlayer === 0 ? "green" : "blue"}`;
+        drawOnline(snapshot);
+      }
+
+      function sendOnline(data) {
+        if (onlineSocket && onlineSocket.readyState === WebSocket.OPEN) {
+          onlineSocket.send(JSON.stringify(data));
+        }
+      }
+
+      function setOnlineButtonsEnabled(enabled) {
+        document.getElementById("create-room-button").disabled = !enabled;
+        document.getElementById("join-room-button").disabled = !enabled;
+      }
+
+      async function connectOnline(action) {
+        const name = document.getElementById("online-name").value.trim()
+          || `Pemain ${action === "create" ? 1 : 2}`;
+        const code = document.getElementById("room-code-input").value.trim().toUpperCase();
+        const errorElement = document.getElementById("online-error");
+        if (location.protocol === "file:") {
+          errorElement.textContent =
+            "Untuk kode ruang, jalankan mulai_game.bat di komputer host, lalu buka alamat server yang ditampilkan. Jangan buka file HTML langsung.";
+          return;
+        }
+        if (action === "join" && !code) {
+          errorElement.textContent = "Masukkan kode ruang teman.";
+          return;
+        }
+        errorElement.textContent = "";
+        setOnlineButtonsEnabled(false);
+
+        const healthController = new AbortController();
+        const healthTimeout = setTimeout(() => healthController.abort(), 5000);
+        try {
+          const response = await fetch(`${location.origin}/health`, {
+            cache: "no-store",
+            signal: healthController.signal,
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const healthInfo = await response.json();
+          if (healthInfo.service !== "snake-two-player" || healthInfo.websocket !== "/ws") {
+            throw new Error("Alamat ini bukan server game Ular");
+          }
+        } catch (error) {
+          setOnlineButtonsEnabled(true);
+          if (error.name === "AbortError") {
+            errorElement.textContent = `Server game tidak merespons di ${location.origin}. Di komputer host, jalankan mulai_game.bat. Di HP, gunakan alamat IP Wi-Fi yang ditampilkan, bukan localhost.`;
+          } else {
+            errorElement.textContent = `Alamat ${location.origin} tidak menjalankan server game. Buka alamat yang ditampilkan oleh mulai_game.bat atau URL hosting yang menjalankan server.py.`;
+          }
+          return;
+        } finally {
+          clearTimeout(healthTimeout);
+        }
+
+        const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        let connection;
+        try {
+          connection = new WebSocket(`${protocol}//${location.host}/ws`);
+          onlineSocket = connection;
+        } catch (error) {
+          setOnlineButtonsEnabled(true);
+          errorElement.textContent = `Alamat server tidak valid: ${error.message}`;
+          return;
+        }
+
+        onlineTimeout = setTimeout(() => {
+          if (connection !== onlineSocket || onlineLobby.hidden) return;
+          onlineTimeout = null;
+          setOnlineButtonsEnabled(true);
+          errorElement.textContent = "Server tidak merespons. Game online perlu di-host; pastikan hosting menjalankan server.py.";
+          connection.close();
+        }, 10000);
+
+        connection.addEventListener("open", () => {
+          if (connection === onlineSocket) {
+            connection.send(JSON.stringify({ type: action, name, code }));
+          }
+        });
+        connection.addEventListener("message", (event) => {
+          let data;
+          try {
+            data = JSON.parse(event.data);
+          } catch {
+            if (onlineTimeout !== null) clearTimeout(onlineTimeout);
+            onlineTimeout = null;
+            setOnlineButtonsEnabled(true);
+            errorElement.textContent = "Alamat ini bukan server game online. Gunakan URL hosting yang menjalankan server.py.";
+            connection.close();
+            return;
+          }
+          if (data.type === "error") {
+            if (onlineTimeout !== null) clearTimeout(onlineTimeout);
+            onlineTimeout = null;
+            setOnlineButtonsEnabled(true);
+            errorElement.textContent = data.message;
+            connection.close();
+          } else if (data.type === "joined") {
+            if (onlineTimeout !== null) clearTimeout(onlineTimeout);
+            onlineTimeout = null;
+            onlineRoomCode = data.code;
+            onlinePlayer = data.player;
+            document.getElementById("active-room-code").textContent = onlineRoomCode;
+            onlineLobby.hidden = true;
+            onlineGame.hidden = false;
+          } else if (data.type === "state") {
+            renderOnlineState(data.state);
+          } else if (data.type === "room_closed") {
+            onlineStatus = "disconnected";
+            onlineMessage.textContent = "Teman terputus dan ruang ditutup.";
+            onlineStartButton.disabled = true;
+          }
+        });
+        connection.addEventListener("close", () => {
+          if (onlineTimeout !== null) clearTimeout(onlineTimeout);
+          onlineTimeout = null;
+          if (connection === onlineSocket) {
+            onlineSocket = null;
+            setOnlineButtonsEnabled(true);
+          }
+          if (!onlineGame.hidden) {
+            onlineStatus = "disconnected";
+            onlineMessage.textContent = "Koneksi terputus. Muat ulang halaman untuk mencoba kembali.";
+            onlineStartButton.disabled = true;
+          }
+        });
+        connection.addEventListener("error", () => {
+          if (connection === onlineSocket && !onlineLobby.hidden) {
+            if (onlineTimeout !== null) clearTimeout(onlineTimeout);
+            onlineTimeout = null;
+            setOnlineButtonsEnabled(true);
+            errorElement.textContent = "Tidak bisa terhubung. Pastikan Anda membuka URL hosting game yang benar.";
+          }
+        });
+      }
+
+      document.addEventListener("keydown", (event) => {
+        const key = event.key.toLowerCase();
+        const controls = {
+          w: [0, "up"],
+          s: [0, "down"],
+          a: [0, "left"],
+          d: [0, "right"],
+          arrowup: [1, "up"],
+          arrowdown: [1, "down"],
+          arrowleft: [1, "left"],
+          arrowright: [1, "right"],
+        };
+
+        if (key === " " || key.startsWith("arrow")) event.preventDefault();
+        if (selectedMode === "online") {
+          if (key === " " && (onlineStatus === "running" || onlineStatus === "paused")) {
+            sendOnline({ type: onlineStatus === "running" ? "pause" : "start" });
+          } else {
+            const playerKeys = onlinePlayer === 1
+              ? { arrowup: "up", arrowdown: "down", arrowleft: "left", arrowright: "right" }
+              : { w: "up", s: "down", a: "left", d: "right" };
+            if (playerKeys[key]) sendOnline({ type: "direction", direction: playerKeys[key] });
+          }
+          return;
+        }
+        if (key === " ") {
+          if (gameStatus === "ready") startGame();
+          else if (gameStatus === "running" || gameStatus === "paused") pauseGame();
+          else newGame();
+          return;
+        }
+        if (controls[key]) changeDirection(controls[key][0], controls[key][1]);
+      });
+
+      startButton.addEventListener("click", () => {
+        if (gameStatus === "finished") newGame();
+        if (gameStatus === "ready" || gameStatus === "paused") startGame();
+      });
+      resetButton.addEventListener("click", newGame);
+      document.getElementById("local-back-button").addEventListener("click", () => {
+        clearInterval(timer);
+        timer = null;
+        if (gameStatus === "running") {
+          gameStatus = "paused";
+          message.textContent = "Permainan dijeda.";
+          startButton.textContent = "Lanjut";
+        }
+        selectedMode = "local";
+        localGame.hidden = true;
+        modeSelect.hidden = false;
+        document.getElementById("local-back-button").hidden = true;
+      });
+      document.getElementById("local-mode-button").addEventListener("click", () => {
+        selectedMode = "local";
+        modeSelect.hidden = true;
+        onlineLobby.hidden = true;
+        localGame.hidden = false;
+        document.getElementById("local-back-button").hidden = false;
+      });
+      document.getElementById("online-mode-button").addEventListener("click", () => {
+        if (gameStatus === "running") {
+          clearInterval(timer);
+          timer = null;
+          gameStatus = "paused";
+          message.textContent = "Permainan dijeda.";
+          startButton.textContent = "Lanjut";
+          draw();
+        }
+        selectedMode = "online";
+        modeSelect.hidden = true;
+        localGame.hidden = true;
+        onlineLobby.hidden = false;
+        document.getElementById("local-back-button").hidden = true;
+        if (location.protocol === "file:") {
+          document.getElementById("online-error").textContent =
+            "Untuk kode ruang, jalankan mulai_game.bat terlebih dahulu, lalu pilih Main online dari halaman yang terbuka.";
+        }
+      });
+      document.getElementById("online-back-button").addEventListener("click", () => {
+        onlineLobby.hidden = true;
+        modeSelect.hidden = false;
+        document.getElementById("local-back-button").hidden = true;
+        selectedMode = "local";
+      });
+      document.getElementById("create-room-button").addEventListener("click", () => {
+        void connectOnline("create");
+      });
+      document.getElementById("join-room-button").addEventListener("click", () => {
+        void connectOnline("join");
+      });
+      document.getElementById("room-code-input").addEventListener("input", (event) => {
+        event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      });
+      document.getElementById("room-code-input").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") connectOnline("join");
+      });
+      document.getElementById("online-start-button").addEventListener("click", () => {
+        if (onlineStatus === "ready" || onlineStatus === "paused") sendOnline({ type: "start" });
+        else if (onlineStatus === "running") sendOnline({ type: "pause" });
+      });
+      document.querySelectorAll("[data-local-player]").forEach((button) => {
+        button.addEventListener("click", () => {
+          changeDirection(Number(button.dataset.localPlayer), button.dataset.direction);
+        });
+      });
+      document.querySelectorAll("[data-online-direction]").forEach((button) => {
+        button.addEventListener("click", () => {
+          sendOnline({ type: "direction", direction: button.dataset.onlineDirection });
+        });
+      });
+      document.getElementById("online-reset-button").addEventListener("click", () => sendOnline({ type: "reset" }));
+      document.getElementById("leave-room-button").addEventListener("click", () => {
+        if (onlineSocket) onlineSocket.close();
+        onlineGame.hidden = true;
+        document.getElementById("online-touch-controls").hidden = true;
+        onlineLobby.hidden = true;
+        modeSelect.hidden = false;
+        document.getElementById("local-back-button").hidden = true;
+        onlinePlayer = -1;
+        onlineStatus = "disconnected";
+        selectedMode = "local";
+      });
+      document.getElementById("copy-room-link").addEventListener("click", async () => {
+        const link = `${location.origin}${location.pathname}?room=${onlineRoomCode}`;
+        try {
+          await navigator.clipboard.writeText(link);
+          onlineMessage.textContent = "Tautan ruang tersalin. Kirim ke teman!";
+        } catch {
+          window.prompt("Salin tautan ini untuk teman:", link);
+        }
+      });
+
+      modeSelect.hidden = false;
+      localGame.hidden = true;
+      onlineLobby.hidden = true;
+      onlineGame.hidden = true;
+      document.getElementById("local-back-button").hidden = true;
+      if (location.protocol === "file:") {
+        document.getElementById("online-help").textContent =
+          "Untuk bermain dengan kode ruang, klik dua kali mulai_game.bat. Game akan membuka halaman yang menyalakan server otomatis.";
+      }
+      newGame();
+      drawOnline(null);
+      const sharedRoomCode = new URLSearchParams(location.search).get("room");
+      if (sharedRoomCode !== null) {
+        const code = sharedRoomCode.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+        document.getElementById("room-code-input").value = code;
+        selectedMode = "online";
+        modeSelect.hidden = true;
+        localGame.hidden = true;
+        onlineLobby.hidden = false;
+        if (code.length === 6) {
+          void connectOnline("join");
+        } else {
+          document.getElementById("online-error").textContent =
+            "Tautan ruang tidak valid. Minta teman mengirim tautan yang benar.";
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
